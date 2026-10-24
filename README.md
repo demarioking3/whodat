@@ -37,9 +37,8 @@ Chat (WHO DAT CHAT) is completely separate: it never asks a question, ends a tur
 
 ## Online multiplayer
 
-- Same approach as TURK: rooms are rows in the free Cloudflare D1 database (table `whodat_rooms`, in the existing `WHODAT_DB`
-  database — the two games never touch each other's tables). If you ever want a separate database, create one and bind it
-  as `WHODAT_DB`; the code uses it automatically.
+- Rooms are rows in the free Cloudflare D1 database `whodat-game` (binding `WHODAT_DB`, table `whodat_rooms`, created
+  automatically). Rooms untouched for a day are deleted.
 - The server is the only source of truth. Each browser only receives its own mystery player; the opponent's is sent only
   after the match ends. The opponent's board is only ever sent as a count.
 - Each player gets a secret 48-character token stored in their browser. Only the two seated players can read the room or
