@@ -1,0 +1,11 @@
+// Cloudflare Pages settings for whodat.demarioking.com (Pages project "whodat", root directory = repo root).
+// The game page is static files in ./site. The online-play server lives in ./functions (Pages Functions, under /api/).
+{
+  "name": "whodat",
+  "pages_build_output_dir": "./site",
+  "compatibility_date": "2026-06-01",
+  // Game rooms (a free Cloudflare D1 database). The table is created automatically on first use.
+  "d1_databases": [
+    { "binding": "WHODAT_DB", "database_name": "whodat-game", "database_id": "b1f2d7ab-68bc-4f2d-83ae-7712079fbde1" }
+  ]
+}

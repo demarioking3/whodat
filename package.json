@@ -1,0 +1,11 @@
+{
+  "name": "whodat",
+  "private": true,
+  "type": "module",
+  "description": "WHO DAT? two-player guessing game, served at whodat.demarioking.com. Page: site/, game server: functions/.",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "test": "node --test test/engine.test.mjs test/server.test.mjs",
+    "local": "node test/local-server.mjs"
+  }
+}

@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>WHO DAT? — DeMario King</title>
+  <meta name="description" content="WHO DAT? Ask questions. Knock down characters. Talk your talk. Find the mystery player. A two-player guessing game.">
+  <meta name="theme-color" content="#0a0a0c">
+  <meta property="og:title" content="WHO DAT?">
+  <meta property="og:description" content="Ask questions. Knock down characters. Talk your talk. Find the mystery player.">
+  <meta property="og:image" content="https://whodat.demarioking.com/img/whodat-cover.jpg">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/whodat.css">
+</head>
+<body>
+  <noscript><p class="noscript">WHO DAT? needs JavaScript turned on.</p></noscript>
+
+  <!-- top bar: always visible -->
+  <header class="topbar">
+    <a class="topbar__back" href="https://demarioking.com/#game-zone"><span aria-hidden="true">←</span> Game Zone</a>
+    <p class="topbar__brand" aria-hidden="true">WHO DAT?</p>
+    <div class="topbar__tools">
+      <span class="conn" id="conn" hidden><span class="conn__dot"></span><span class="conn__text">Connected</span></span>
+      <span class="roomtag" id="roomtag" hidden></span>
+      <button class="btn btn--ghost btn--sm" id="btn-leave" type="button" hidden>Leave</button>
+      <button class="icon-btn" id="btn-how" type="button" aria-label="How to play">?</button>
+      <button class="icon-btn" id="btn-mute" type="button" aria-pressed="false" aria-label="Mute sounds"><span class="ico-sound" aria-hidden="true">🔊</span></button>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- ============ HOME ============ -->
+    <section class="screen screen--home" id="s-home" hidden>
+      <h1 class="sr-only">WHO DAT?</h1>
+      <figure class="cover">
+        <img class="cover__img" src="/img/whodat-cover.jpg"
+             srcset="/img/whodat-cover-700.jpg 700w, /img/whodat-cover.jpg 1254w"
+             sizes="(max-width: 560px) 92vw, 520px" width="1254" height="1254"
+             alt="WHO DAT? cover art: the title in gold and white graffiti letters between a red and a blue question mark, above a faceless white figure studying its reflection in a mirror." fetchpriority="high">
+      </figure>
+      <p class="home__tag">Ask questions. Knock down characters. Talk your talk. Find the mystery player.</p>
+      <div class="home__actions">
+        <button class="btn btn--gold btn--xl" id="btn-local" type="button">Play Local</button>
+        <button class="btn btn--blue btn--xl" id="btn-online" type="button">Play Online</button>
+        <button class="btn btn--ghost btn--xl" id="btn-how2" type="button">How to Play</button>
+      </div>
+    </section>
+
+    <!-- ============ LOCAL SETUP ============ -->
+    <section class="screen panel" id="s-local" hidden>
+      <h2 class="panel__title">Play Local</h2>
+      <p class="panel__lead">Two players, one device. You'll pass it back and forth — privacy screens keep your mystery player secret.</p>
+      <form class="form" id="form-local" novalidate>
+        <label class="field"><span class="field__label">Player 1 name</span>
+          <input class="field__input" name="p1" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Player 1"></label>
+        <label class="field"><span class="field__label">Player 2 name</span>
+          <input class="field__input" name="p2" maxlength="20" autocomplete="off" spellcheck="false" placeholder="Player 2"></label>
+        <p class="form__error" role="alert"></p>
+        <div class="row">
+          <button class="btn btn--ghost" type="button" data-go="home">Back</button>
+          <button class="btn btn--gold" type="submit">Start Match</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ ONLINE: CREATE / JOIN ============ -->
+    <section class="screen panel" id="s-online" hidden>
+      <h2 class="panel__title">Play Online</h2>
+      <p class="panel__lead">Create a room and send your friend the code, or join theirs. No account needed.</p>
+      <form class="form" id="form-online" novalidate>
+        <label class="field"><span class="field__label">Your name</span>
+          <input class="field__input" name="name" maxlength="20" autocomplete="nickname" spellcheck="false" required></label>
+        <button class="btn btn--gold btn--wide" type="submit" name="create" value="1">Create Room</button>
+        <div class="or"><span>or join a room</span></div>
+        <label class="field"><span class="field__label">Room code</span>
+          <input class="field__input field__input--code" name="code" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCDE"></label>
+        <button class="btn btn--blue btn--wide" type="button" id="btn-join">Join Room</button>
+        <p class="form__error" role="alert"></p>
+        <button class="btn btn--ghost" type="button" data-go="home">Back</button>
+      </form>
+    </section>
+
+    <!-- ============ ONLINE: WAITING ROOM ============ -->
+    <section class="screen panel" id="s-wait" hidden>
+      <h2 class="panel__title">Waiting Room</h2>
+      <p class="panel__lead">Send this code to your opponent:</p>
+      <p class="room-code" id="wait-code">-----</p>
+      <div class="row">
+        <button class="btn btn--blue" type="button" id="btn-copy">Copy invite link</button>
+      </div>
+      <p class="copy-note" id="copy-note" role="status"></p>
+      <ul class="seats" id="wait-seats"></ul>
+      <p class="waiting-dots" id="wait-msg">Waiting for a second player to join</p>
+      <button class="btn btn--ghost" type="button" data-act="leave">Leave Room</button>
+    </section>
+
+    <!-- ============ PRIVACY / PASS-THE-DEVICE ============ -->
+    <section class="screen cover-screen" id="s-pass" hidden>
+      <div class="pass">
+        <p class="pass__eyebrow" id="pass-eyebrow">Pass the device</p>
+        <h2 class="pass__title" id="pass-title">Player 1</h2>
+        <p class="pass__msg" id="pass-msg">No peeking!</p>
+        <button class="btn btn--gold btn--xl" type="button" id="btn-pass">I'm ready — show me</button>
+      </div>
+    </section>
+
+    <!-- ============ SELECT MYSTERY PLAYER ============ -->
+    <section class="screen screen--select" id="s-select" hidden>
+      <div class="select-head">
+        <p class="eyebrow" id="select-who">Player 1</p>
+        <h2 class="select-title">Pick your mystery player</h2>
+        <p class="select-sub" id="select-sub">Your opponent has to figure out who it is. Keep it secret.</p>
+      </div>
+      <div class="board board--select" id="select-board" role="radiogroup" aria-label="Choose your mystery player"></div>
+      <div class="select-bar">
+        <p class="select-bar__pick" id="select-pick">Tap a character</p>
+        <button class="btn btn--gold" type="button" id="btn-lock" disabled>Lock In</button>
+      </div>
+    </section>
+
+    <!-- ============ GAME ============ -->
+    <section class="screen screen--game" id="s-game" hidden>
+      <div class="turn" id="turn" aria-live="polite">
+        <p class="turn__who" id="turn-who">YOUR TURN</p>
+        <p class="turn__step" id="turn-step"></p>
+      </div>
+
+      <div class="game">
+        <div class="game__board">
+          <div class="board-head">
+            <div class="mine" id="mine" title="Your mystery player">
+              <div class="mine__pic" id="mine-pic"></div>
+              <div><span class="mine__label">Your mystery player</span><strong class="mine__name" id="mine-name"></strong></div>
+            </div>
+            <div class="counts">
+              <span class="count"><strong id="count-me">24</strong> left on your board</span>
+              <span class="count count--opp"><strong id="count-opp">24</strong> left on <span id="count-opp-name">theirs</span></span>
+            </div>
+          </div>
+          <p class="guess-banner" id="guess-banner" hidden>Final guess: tap who you think their mystery player is. <button class="link-btn" type="button" id="btn-guess-cancel">Cancel</button></p>
+          <div class="board" id="board" aria-label="Your character board. Tap a character to knock it down or bring it back."></div>
+          <p class="board-hint">Tap a portrait to knock it down. Tap again to bring it back.</p>
+        </div>
+
+        <aside class="game__side">
+          <div class="action" id="action"></div>
+
+          <section class="chat" id="chat" aria-labelledby="chat-title">
+            <header class="chat__head">
+              <h2 class="chat__title" id="chat-title">WHO DAT CHAT</h2>
+              <button class="icon-btn chat__close" type="button" id="btn-chat-close" aria-label="Close chat">✕</button>
+            </header>
+            <p class="chat__note" id="chat-note" hidden>Shared device — both players can see these messages.</p>
+            <ol class="chat__list" id="chat-list" aria-live="polite"></ol>
+            <form class="chat__form" id="chat-form" autocomplete="off">
+              <div class="emoji" aria-label="Quick emoji">
+                <button type="button" data-emoji="😂">😂</button><button type="button" data-emoji="💀">💀</button><button type="button" data-emoji="😭">😭</button><button type="button" data-emoji="🔥">🔥</button><button type="button" data-emoji="👀">👀</button><button type="button" data-emoji="🤔">🤔</button><button type="button" data-emoji="👑">👑</button><button type="button" data-emoji="🫡">🫡</button>
+              </div>
+              <div class="chat__row">
+                <label class="sr-only" for="chat-input">Chat message</label>
+                <input id="chat-input" class="chat__input" maxlength="280" placeholder="Talk your talk…" enterkeyhint="send">
+                <button class="btn btn--red btn--sm" type="submit">Send</button>
+              </div>
+              <p class="chat__status" id="chat-status" role="status"></p>
+            </form>
+          </section>
+
+          <details class="history" id="history-box" open>
+            <summary class="history__title">Question history <span id="history-count">(0)</span></summary>
+            <ol class="history__list" id="history"></ol>
+          </details>
+        </aside>
+      </div>
+
+      <button class="chat-fab" type="button" id="btn-chat" aria-controls="chat" aria-expanded="false">💬 Chat <span class="badge" id="chat-badge" hidden>0</span></button>
+      <div class="scrim" id="chat-scrim" hidden></div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="screen screen--results" id="s-results" hidden>
+      <div class="confetti" id="confetti" aria-hidden="true"></div>
+      <p class="eyebrow" id="res-eyebrow">Match over</p>
+      <h2 class="res-title" id="res-title">YOU WIN!</h2>
+      <p class="res-sub" id="res-sub"></p>
+      <div class="reveal" id="reveal"></div>
+      <p class="res-note" id="res-note" role="status"></p>
+      <div class="res-actions">
+        <button class="btn btn--gold btn--xl" type="button" id="btn-replay">Replay</button>
+        <button class="btn btn--blue" type="button" id="btn-new">New Match</button>
+        <a class="btn btn--ghost" href="https://demarioking.com/#game-zone">Back to Game Zone</a>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="alert" hidden></div>
+
+  <!-- How to play -->
+  <dialog class="dialog" id="dlg-how" aria-labelledby="how-title">
+    <h2 id="how-title">How to Play</h2>
+    <ol class="how">
+      <li><strong>Pick a mystery player.</strong> Both players secretly choose one of the 24 characters.</li>
+      <li><strong>Ask a yes/no question.</strong> On your turn, type your own question — "Does your player wear glasses?"</li>
+      <li><strong>Your opponent answers.</strong> They tap <b>YES</b> or <b>NO</b> based on their mystery player.</li>
+      <li><strong>Knock them down yourself.</strong> Tap every portrait the answer rules out. Tapped the wrong one? Tap it again to bring it back. The game never does this for you.</li>
+      <li><strong>End your turn.</strong> Hit <b>Done — End Turn</b> and your opponent goes.</li>
+      <li><strong>Make your final guess.</strong> Think you know? On your turn, tap <b>Make Final Guess</b>. Right = you win. Wrong = you lose. One shot.</li>
+    </ol>
+    <p class="how-note">Chat is just for talking trash — it never asks a question, ends a turn or touches the board.</p>
+    <form method="dialog"><button class="btn btn--gold btn--wide">Got it</button></form>
+  </dialog>
+
+  <!-- Confirm final guess -->
+  <dialog class="dialog" id="dlg-guess" aria-labelledby="guess-title">
+    <h2 id="guess-title">Lock in your final guess?</h2>
+    <div class="guess-pick" id="guess-pick"></div>
+    <p>If you're right, you win. If you're wrong, you lose. There's no second guess.</p>
+    <form method="dialog" class="row">
+      <button class="btn btn--ghost" value="cancel">Not yet</button>
+      <button class="btn btn--red" value="ok" id="btn-guess-ok">Lock it in</button>
+    </form>
+  </dialog>
+
+  <!-- Confirm leave -->
+  <dialog class="dialog" id="dlg-leave" aria-labelledby="leave-title">
+    <h2 id="leave-title">Leave this match?</h2>
+    <p id="leave-msg">If a match is in progress, leaving counts as a loss.</p>
+    <form method="dialog" class="row">
+      <button class="btn btn--ghost" value="cancel">Stay</button>
+      <button class="btn btn--red" value="ok">Leave</button>
+    </form>
+  </dialog>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
